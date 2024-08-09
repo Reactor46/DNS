@@ -111,7 +111,8 @@ Import-Module DHCPServer -ErrorAction Ignore
 Import-Module ActiveDirectory -ErrorAction Ignore 
  
 if (-not (Get-Module DNSServer)) { 
-    throw 'The Windows Feature "DNS Server Tools" is not installed.(On server SKU run "Install-WindowsFeature -Name RSAT-DNS-Server", on client SKU install RSAT client)' 
+    throw 'The Windows Feature "DNS Server Tools" is not installed. ` 
+        (On server SKU run "Install-WindowsFeature -Name RSAT-DNS-Server", on client SKU install RSAT client)' 
 } 
  
 # 
@@ -238,19 +239,24 @@ param (
         { 
             # Handling DNS server module specific exceptions. 
             if (5 -eq $_.Exception.Errordata.error_Code) { 
-                LogComment $("Caught error: Access is denied, considering it as current login creds don't have server read access.") $script:logLevel.Warning; 
+                LogComment $("Caught error: Access is denied, considering it as current login creds don't have server read access.") ` 
+                    $script:logLevel.Warning; 
                 $script:cmdLetReturnedStatus = [RetStatus]::AccessIsDenied; 
             } elseif (1722 -eq $_.Exception.Errordata.error_Code) { 
-                LogComment $("Caught error: The RPC server is unavailable, considering it as server is down.") $script:logLevel.Warning; 
+                LogComment $("Caught error: The RPC server is unavailable, considering it as server is down.") ` 
+                    $script:logLevel.Warning; 
                 $script:cmdLetReturnedStatus = [RetStatus]::RpcServerIsUnavailable; 
             } elseif (9601 -eq $_.Exception.Errordata.error_Code) { 
-                LogComment $("Caught error: DNS zone does not exist, considering it as given server isn't hosting input zone.") $script:logLevel.Warning; 
+                LogComment $("Caught error: DNS zone does not exist, considering it as given server isn't hosting input zone.") ` 
+                    $script:logLevel.Warning; 
                 $script:cmdLetReturnedStatus = [RetStatus]::ZoneDoesNotExist; 
             } elseif (9611 -eq $_.Exception.Errordata.error_Code) { 
-                LogComment $("Caught error: Invalid DNS zone type, considering it as we can't perform current operation on input zone.") $script:logLevel.Warning; 
+                LogComment $("Caught error: Invalid DNS zone type, considering it as we can't perform current operation on input zone.") ` 
+                    $script:logLevel.Warning; 
                 $script:cmdLetReturnedStatus = [RetStatus]::OperationIsNotSupported; 
             } elseif (9714 -eq $_.Exception.Errordata.error_Code) { 
-                LogComment $("Caught error: DNS name does not exist, considering it as input record doesn't exist.") $script:logLevel.Warning; 
+                LogComment $("Caught error: DNS name does not exist, considering it as input record doesn't exist.") ` 
+                    $script:logLevel.Warning; 
                 $script:cmdLetReturnedStatus = [RetStatus]::RecordDoesNotExist; 
             } else { 
                 LogComment $("Caught error while executing '" + $displayString + "' with errorcode: " + $_.Exception.Errordata.error_Code) ` 
@@ -310,7 +316,8 @@ param (
         LogComment "Unable to load DNS servers from the cache. So loading from DHCP servers."          
         if (-not(Get-Module DHCPServer)) { 
             LogComment $('The Windows Feature "DHCP Server Tools" is not installed. ` 
-                (On server SKU run "Install-WindowsFeature -Name RSAT-DHCP", on client SKU install RSAT client)') $script:logLevel.Warning; 
+                (On server SKU run "Install-WindowsFeature -Name RSAT-DHCP", on client SKU install RSAT client)') ` 
+                $script:logLevel.Warning; 
             LogComment $("Skipping this step and returning with NULL DNS List.") $script:logLevel.Warning;  
             return $null; 
         } 
@@ -382,10 +389,12 @@ param (
                 if ($null -ne $domainList) { 
                     ExecuteCmdLet "Set-Content" @{"Path" = $domainListFilePath; "Value" = $domainList}; 
                 } else { 
-                    LogComment $("Unable to obtain domainList from Get-ADForest. Returning with NULL DomainList.") $script:logLevel.Warning; 
+                    LogComment $("Unable to obtain domainList from Get-ADForest. Returning with NULL DomainList.") ` 
+                        $script:logLevel.Warning; 
                 } 
             } else { 
-                LogComment $('The Windows Feature "Active Directory module for Windows PowerShell" is not installed.(On server SKU run "Install-WindowsFeature -Name RSAT-AD-PowerShell", on client SKU install RSAT client)') $script:logLevel.Warning;
+                LogComment $('The Windows Feature "Active Directory module for Windows PowerShell" is not installed. ` 
+                    (On server SKU run "Install-WindowsFeature -Name RSAT-AD-PowerShell", on client SKU install RSAT client)') $script:logLevel.Warning; 
                 LogComment $("Skipping this step and returning with NULL DomainList.") $script:logLevel.Warning;                 
             } 
         } catch [Exception] { 
@@ -570,12 +579,14 @@ param (
                 if ([RetStatus]::ZoneDoesNotExist -eq $script:cmdLetReturnedStatus) { 
                     LogComment $($server + " doesn't host Zone: " + $zone); 
                 } else { 
-                    LogComment $("Failed to get " + $zone + " info on " + $server + " with error " + $script:cmdLetReturnedStatus) $script:logLevel.Error;  
+                    LogComment $("Failed to get " + $zone + " info on " + $server + " with error " + $script:cmdLetReturnedStatus) ` 
+                       $script:logLevel.Error;  
                 } 
             } 
         }  
         if ($null -eq $serverList) { 
-            LogComment $("Didn't find any server which is hosting Zone: " + $zone) $script:logLevel.Warning; 
+            LogComment $("Didn't find any server which is hosting Zone: " + $zone) ` 
+                $script:logLevel.Warning; 
         } 
         $zoneAndHostingServersHash.Add($zone, $serverList);            
     }  
@@ -614,7 +625,8 @@ param (
             if ([RetStatus]::Success -eq $script:cmdLetReturnedStatus) { 
                 LogComment $($zoneHostingServer + " doesn't host any Zone"); 
             } else { 
-                LogComment $("Failed to get Zone info on " + $zoneHostingServer + " with error " + $script:cmdLetReturnedStatus) $script:logLevel.Error;  
+                LogComment $("Failed to get Zone info on " + $zoneHostingServer + " with error " + $script:cmdLetReturnedStatus) ` 
+                    $script:logLevel.Error;  
             } 
         } 
     }     
@@ -642,7 +654,8 @@ param (
                 $scopeList = ExecuteCmdLet "Get-DhcpServerv4Scope" @{"ComputerName" = $dhcpServer}; 
                 foreach ($scope in $scopeList) { 
                     try { 
-                        $scopeOption = ExecuteCmdLet "Get-DhcpServerv4OptionValue" @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId; "ScopeId" = $scope.ScopeId}; 
+                        $scopeOption = ExecuteCmdLet "Get-DhcpServerv4OptionValue" ` 
+                            @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId; "ScopeId" = $scope.ScopeId}; 
                         $scopeOptions += $scopeOption; 
                     } catch { 
                         LogComment "Failed to get options for the scope $($scope.ScopeId). Continuing..."; 
@@ -651,7 +664,8 @@ param (
                 $optionList += $scopeOptions; 
             } else { 
                 try { 
-                    $serverOptions = ExecuteCmdLet "Get-DhcpServerv4OptionValue" @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId}; 
+                    $serverOptions = ExecuteCmdLet "Get-DhcpServerv4OptionValue" ` 
+                        @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId}; 
                     $optionList += $serverOptions; 
                 } catch { 
                     LogComment "Get-DhcpServerv4OptionValue -ComputerName $($dhcpServer) -OptionId $OptionId failed. Continuing..."; 
@@ -690,7 +704,8 @@ param (
                 $scopeList = ExecuteCmdLet "Get-DhcpServerv6Scope" @{"ComputerName" = $dhcpServer}; 
                 foreach ($scope in $scopeList) { 
                     try { 
-                        $scopeOption = ExecuteCmdLet "Get-DhcpServerv6OptionValue" @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId; "Prefix" = $scope.Prefix}; 
+                        $scopeOption = ExecuteCmdLet "Get-DhcpServerv6OptionValue" ` 
+                            @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId; "Prefix" = $scope.Prefix}; 
                         $scopeOptions += $scopeOption; 
                     } catch { 
                         LogComment "Failed to get options for the scope $($scope.Prefix). Continuing..."; 
@@ -699,7 +714,8 @@ param (
                 $optionList += $scopeOptions; 
             } else { 
                 try { 
-                    $serverOptions = ExecuteCmdLet "Get-DhcpServerv6OptionValue" @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId}; 
+                    $serverOptions = ExecuteCmdLet "Get-DhcpServerv6OptionValue" ` 
+                        @{"ComputerName" = $dhcpServer; "OptionId" = $OptionId}; 
                     $optionList += $serverOptions; 
                 } catch { 
                     LogComment "Get-DhcpServerv6OptionValue -ComputerName $($dhcpServer) -OptionId $OptionId failed. Continuing..."; 
@@ -774,11 +790,14 @@ param (
                     LogComment $("Validation of " + $zone + " passed on DNS Server: " + $dnsServer) 
                         $script:logLevel.Host;                 
                 } else {                     
-                    LogComment $("Validation of " + $zone + " failed on DNS Server: " + $dnsServer)$script:logLevel.Error;  
-                    LogComment $("Validation output:" + $resultStream) $script:logLevel.Error;$result = $resultStream; 
+                    LogComment $("Validation of " + $zone + " failed on DNS Server: " + $dnsServer) 
+                        $script:logLevel.Error;  
+                    LogComment $("Validation output:" + $resultStream) $script:logLevel.Error; 
+                    $result = $resultStream; 
                 } 
             } catch { 
-                LogComment $("Test-ZoneHealthAcrossAllDnsServers failed for Zone: " + $zone + " on DNSServer: " + $dnsServer + " `n " + $_.Exception) $script:logLevel.Error; 
+                LogComment $("Test-ZoneHealthAcrossAllDnsServers failed for Zone: " + $zone + " on DNSServer: " + $dnsServer + " `n " + $_.Exception) ` 
+                    $script:logLevel.Error; 
                 $result = [RetStatus]::Failure; 
             }             
             $status = Insert-ResultInObject $status $dnsServer $result; 
@@ -838,10 +857,12 @@ param (
                         # In case of non-default values of Refresh & NoRefresh interval and $null ScavengeServers 
                         # we're only giving below 3 warnings, not considering them as a failure case. 
                         if ($defaultRefreshInterval -ne $retObj.RefreshInterval) { 
-                            LogComment $("RefreshInterval is set to non-default value: " + $retObj.RefreshInterval) $script:logLevel.Warning; 
+                            LogComment $("RefreshInterval is set to non-default value: " + $retObj.RefreshInterval) ` 
+                                $script:logLevel.Warning; 
                         } 
                         if ($defaultRefreshInterval -ne $retObj.NoRefreshInterval) { 
-                            LogComment $("NoRefreshInterval is set to non-default value: " + $retObj.NoRefreshInterval) $script:logLevel.Warning; 
+                            LogComment $("NoRefreshInterval is set to non-default value: " + $retObj.NoRefreshInterval) ` 
+                                $script:logLevel.Warning; 
                         }  
                         if ($null -eq $retObj.ScavengeServers) { 
                             LogComment $("There's no ScavengeServers configured.") $script:logLevel.Warning; 
@@ -850,7 +871,8 @@ param (
                         # If Aging is enabled on more than 1 server, considering it as failure case. 
                         if ($agingStatus) { 
                             $result = [RetStatus]::Failure; 
-                            LogComment $("Aging is enabled on more than one server for Zone: " + $zone) $script:logLevel.Warning; 
+                            LogComment $("Aging is enabled on more than one server for Zone: " + $zone) ` 
+                                $script:logLevel.Warning; 
                         } else {                          
                             $agingStatus = $true; 
                         } 
@@ -861,26 +883,31 @@ param (
                     if ([RetStatus]::OperationIsNotSupported -eq $script:cmdLetReturnedStatus) { 
                         LogComment $($zone + " is non-primary zone on " + $server); 
                     } else { 
-                        LogComment $("Failed to get " + $zone + " aging info on " + $server + " with error " + $script:cmdLetReturnedStatus) $script:logLevel.Error; 
+                        LogComment $("Failed to get " + $zone + " aging info on " + $server + " with error " + $script:cmdLetReturnedStatus) ` 
+                            $script:logLevel.Error; 
                         $result = [RetStatus]::Failure; 
                     } 
                 }                
             } catch { 
-                LogComment $("Test-ZoneAgingHealth failed for Zone: " + $zone + " on Server: " + $server + " `n " + $_.Exception) $script:logLevel.Error; 
+                LogComment $("Test-ZoneAgingHealth failed for Zone: " + $zone + " on Server: " + $server + " `n " + $_.Exception) ` 
+                    $script:logLevel.Error; 
                 $result = [RetStatus]::Failure; 
             } 
          
             # If Aging is not enabled on any server, considering it as failure case. 
             if (!$agingStatus) { 
-                LogComment $("No server found with zone aging enabled for the Zone: " + $zone) $script:logLevel.Warning;  
+                LogComment $("No server found with zone aging enabled for the Zone: " + $zone) ` 
+                    $script:logLevel.Warning;  
                 $result = [RetStatus]::Failure; 
             } 
              
             if ([RetStatus]::Success -eq $result) { 
                 LogComment $("Zone Aging setting validation of " + $zone + " passed."); 
-                LogComment $("Zone Aging setting validation of " + $zone + " passed.") $script:logLevel.Host;                 
+                LogComment $("Zone Aging setting validation of " + $zone + " passed.") ` 
+                    $script:logLevel.Host;                 
             } else { 
-                LogComment $("Zone Aging setting validation of " + $zone + " failed.") $script:logLevel.Error;                 
+                LogComment $("Zone Aging setting validation of " + $zone + " failed.") ` 
+                    $script:logLevel.Error;                 
             }         
             $status = Insert-ResultInObject $status $zone $result; 
         } 
@@ -944,10 +971,12 @@ param (
                                             $resultStream = $resultStream + $ip.IPAddressToString + ":" + $retVal + "`n"; 
                                             if ([RetStatus]::Success -eq $retVal) { 
                                                 LogComment $("Validated NameServer IP: " + $ip + " for ZoneDelegation: " + $zoneDelName + " on Server: " + $server); 
-                                                LogComment $("Validated NameServer IP: " + $ip + " for ZoneDelegation: " + $zoneDelName + " on Server: " + $server) $script:logLevel.Host;                 
+                                                LogComment $("Validated NameServer IP: " + $ip + " for ZoneDelegation: " + $zoneDelName + " on Server: " + $server) ` 
+                                                    $script:logLevel.Host;                 
                                             } else { 
                                                 $result = [RetStatus]::Failure; 
-                                                LogComment $("Validation of NameServer IP: " + $ip + " for ZoneDelegation: " + $zoneDelName + " on Server: " + $server + " failed.") $script:logLevel.Error; 
+                                                LogComment $("Validation of NameServer IP: " + $ip + " for ZoneDelegation: " + $zoneDelName + " on Server: " + $server + " failed.") ` 
+                                                    $script:logLevel.Error; 
                                             } 
                                         } 
                                     } else { 
@@ -963,7 +992,8 @@ param (
                             } 
                         } 
                     } catch { 
-                        LogComment $("Test-ZoneDelegationHealth failed for Zone: " + $zone + " on Server: " + $server + " `n " + $_.Exception) $script:logLevel.Error; 
+                        LogComment $("Test-ZoneDelegationHealth failed for Zone: " + $zone + " on Server: " + $server + " `n " + $_.Exception) ` 
+                            $script:logLevel.Error; 
                         $result = [RetStatus]::Failure; 
                     } 
                     $status = Insert-ResultInObject $status $rr.hostname $result; 
@@ -975,7 +1005,8 @@ param (
                 } elseif ([RetStatus]::OperationIsNotSupported -eq $script:cmdLetReturnedStatus) { 
                     LogComment $($zone + " isn't a primary or secondary zone on " + $server); 
                 } else { 
-                    LogComment $("Failed to get NS records under " + $zone + " on " + $server + " with error " + $script:cmdLetReturnedStatus)  $script:logLevel.Error;  
+                    LogComment $("Failed to get NS records under " + $zone + " on " + $server + " with error " + $script:cmdLetReturnedStatus)  ` 
+                        $script:logLevel.Error;  
                     $status = New-Object PSObject; 
                     $status | Add-Member -memberType NoteProperty -name "ZoneName :: Server" -value ($zone + " :: " + $server) -Force; 
                     $status = Insert-ResultInObject $status "Get-DnsServerResourceRecord" $script:cmdLetReturnedStatus; 
@@ -1012,15 +1043,18 @@ param (
                     $result = Test-DnsServerForInputContext $fwdIp.IPAddressToString "Forwarder" $dnsServer; 
                     if ([RetStatus]::Success -eq $result) {                 
                         LogComment $("Validated Forwarder: " + $fwdIp.IPAddressToString + " of DNS Server: " + $dnsServer); 
-                        LogComment $("Validated Forwarder: " + $fwdIp.IPAddressToString + " of DNS Server: " + $dnsServer) $script:logLevel.Host;                 
+                        LogComment $("Validated Forwarder: " + $fwdIp.IPAddressToString + " of DNS Server: " + $dnsServer) ` 
+                            $script:logLevel.Host;                 
                     } else {             
-                        LogComment $("Validation of Forwarder: " + $fwdIp.IPAddressToString + " of DNS Server: " + $dnsServer + " failed.") $script:logLevel.Error; 
+                        LogComment $("Validation of Forwarder: " + $fwdIp.IPAddressToString + " of DNS Server: " + $dnsServer + " failed.") ` 
+                            $script:logLevel.Error; 
                     }      
                     $status = Insert-ResultInObject $status $fwdIp $result; 
                 }             
             } else { 
                 if ([RetStatus]::Success -ne $script:cmdLetReturnedStatus) { 
-                    LogComment $("Unable to get Forwarder list for DnsServer: " + $dnsServer) $script:logLevel.Error;    
+                    LogComment $("Unable to get Forwarder list for DnsServer: " + $dnsServer) ` 
+                        $script:logLevel.Error;    
                     $status = Insert-ResultInObject $status "Get-DnsServerForwarder" $script:cmdLetReturnedStatus; 
                 } else { 
                     LogComment $("There's no forwarder configured on DnsServer: " + $dnsServer); 
@@ -1028,7 +1062,8 @@ param (
                 }                
             } 
         } catch { 
-            LogComment $("Test-ConfiguredForwarderHealth failed on DNSServer: " + $dnsServer + " `n " + $_.Exception) $script:logLevel.Error; 
+            LogComment $("Test-ConfiguredForwarderHealth failed on DNSServer: " + $dnsServer + " `n " + $_.Exception) ` 
+                $script:logLevel.Error; 
             $status = Insert-ResultInObject $status "ForwarderHealthCheckFailed" [RetStatus]::Failure; 
         } 
         $statusArray += $status; 
@@ -1076,10 +1111,12 @@ param (
                             $resultStream = $resultStream + $ip.IPAddressToString + ":" + $retVal + "`n"; 
                             if ([RetStatus]::Success -eq $retVal) { 
                                 LogComment $("Validated RootHints: " + $ip + " of DNS Server: " + $dnsServer); 
-                                LogComment $("Validated RootHints: " + $ip + " of DNS Server: " + $dnsServer) $script:logLevel.Host;                 
+                                LogComment $("Validated RootHints: " + $ip + " of DNS Server: " + $dnsServer) ` 
+                                    $script:logLevel.Host;                 
                             } else { 
                                 $result = [RetStatus]::Failure; 
-                                LogComment $("Validation of RootHints: " + $ip + " of DNS Server: " + $dnsServer + " failed.") $script:logLevel.Error; 
+                                LogComment $("Validation of RootHints: " + $ip + " of DNS Server: " + $dnsServer + " failed.") ` 
+                                    $script:logLevel.Error; 
                             } 
                         }                         
                     } 
@@ -1092,7 +1129,8 @@ param (
                 } 
             } else { 
                 if ([RetStatus]::Success -ne $script:cmdLetReturnedStatus) { 
-                    LogComment $("Unable to get RootHints list for DnsServer: " + $dnsServer) $script:logLevel.Error;    
+                    LogComment $("Unable to get RootHints list for DnsServer: " + $dnsServer) ` 
+                        $script:logLevel.Error;    
                     $status = Insert-ResultInObject $status "Get-DnsServerRootHint" $script:cmdLetReturnedStatus; 
                 } else { 
                     LogComment $("There's no RootHints configured on DnsServer: " + $dnsServer); 
@@ -1100,7 +1138,8 @@ param (
                 } 
             } 
         } catch { 
-            LogComment $("Test-ConfiguredRootHintsHealth failed on DNSServer: " + $dnsServer + " `n " + $_.Exception) $script:logLevel.Error; 
+            LogComment $("Test-ConfiguredRootHintsHealth failed on DNSServer: " + $dnsServer + " `n " + $_.Exception) ` 
+                $script:logLevel.Error; 
             $result = [RetStatus]::Failure; 
             $status = Insert-ResultInObject $status "RootHintsHealthCheckFailed" $result; 
         } 
@@ -1130,7 +1169,8 @@ param (
     try {     
         $retObj = ExecuteCmdLet "Resolve-DnsName" @{"Name" = $dnsName; "Type" = $rrType; "Server" = $dnsServer}; 
         if ($null -eq $retObj) { 
-            LogComment $("Resolve-DnsName for " + $dnsName + " failed on server " + $dnsServer + " with " + $script:cmdLetReturnedStatus) $script:logLevel.Error;  
+            LogComment $("Resolve-DnsName for " + $dnsName + " failed on server " + $dnsServer + " with " + $script:cmdLetReturnedStatus) ` 
+                $script:logLevel.Error;  
             $result = $script:cmdLetReturnedStatus; 
         } else { 
             LogComment $("Name resolution of " + $dnsName + " passed on server " + $dnsServer);  
@@ -1169,7 +1209,8 @@ param (
                 #Resolve and get first IP 
                 $dnsServerIP = [System.Net.Dns]::GetHostAddresses($dnsServer).IPAddressToString.Split(" ")[0];                 
             } catch { 
-                LogComment $("Exception while trying to get IP Address of  " + $dnsServer + "`n" + $_.Exception) $script:logLevel.Error; 
+                LogComment $("Exception while trying to get IP Address of  " + $dnsServer + "`n" + $_.Exception) ` 
+                    $script:logLevel.Error; 
                 throw; 
             } 
         } 
@@ -1183,7 +1224,8 @@ param (
                 LogComment $("Test-DnsServer passed for " + $zoneName + " on server " + $dnsServer + " with Result: " + $retObj.Result); 
                 $result = [RetStatus]::Success; 
             } else { 
-                LogComment $("Test-DnsServer failed for " + $zoneName + " on server " + $dnsServer + " with Result: " + $retObj.Result) $script:logLevel.Warning;  
+                LogComment $("Test-DnsServer failed for " + $zoneName + " on server " + $dnsServer + " with Result: " + $retObj.Result) ` 
+                    $script:logLevel.Warning;  
                 $result = $retObj.Result; 
             } 
         } 
@@ -1222,7 +1264,8 @@ param (
                 LogComment $("Test-DnsServer Passed for DnsServer: " + $dnsServer + " with context: " + $context + " and Result: " + $retObj.Result); 
                 $result = [RetStatus]::Success; 
             } else { 
-                LogComment $("Test-DnsServer Failed for DnsServer: " + $dnsServer + " with context: " + $context + " and Result: " + $retObj.Result) $script:logLevel.Warning;  
+                LogComment $("Test-DnsServer Failed for DnsServer: " + $dnsServer + " with context: " + $context + " and Result: " + $retObj.Result) ` 
+                    $script:logLevel.Warning;  
                 $result = $retObj.Result; 
             } 
         } 
@@ -1256,9 +1299,11 @@ param (
          
         if ($null -eq $retObj) { 
             if ([RetStatus]::Success -eq $script:cmdLetReturnedStatus) { 
-                LogComment $("No NS records found for zone: " + $dnsZone + " on server: " + $dnsServer) $script:logLevel.Warning;  
+                LogComment $("No NS records found for zone: " + $dnsZone + " on server: " + $dnsServer) ` 
+                    $script:logLevel.Warning;  
             } else { 
-                LogComment $("Resolve-DnsName for " + $dnsZone + " failed on server " + $dnsServer + " with " + $script:cmdLetReturnedStatus) $script:logLevel.Error;  
+                LogComment $("Resolve-DnsName for " + $dnsZone + " failed on server " + $dnsServer + " with " + $script:cmdLetReturnedStatus) ` 
+                    $script:logLevel.Error;  
             }             
         } else { 
             LogComment $("NS records found for zone: " + $dnsZone + " on server: " + $dnsServer); 
@@ -1502,7 +1547,8 @@ try {
              
             default { 
                 LogComment $($validationSubType + " isn't a valid input ValidationType, skipping the validation.") $script:logLevel.Warning; 
-                LogComment $("Choose '" + $script:allValidationType + "' or one or more validation types among below:`n" + $($script:validValidationTypes | Out-String)) $script:logLevel.Warning; 
+                LogComment $("Choose '" + $script:allValidationType + "' or one or more validation types among below:`n" + $($script:validValidationTypes | Out-String)) ` 
+                    $script:logLevel.Warning; 
             } 
         } 
     } 
