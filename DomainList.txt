@@ -1,4 +1,3 @@
-fnbm.corp
-phx.fnbm.corp
-creditoneapp.tst
-creditoneapp.biz
+domain1
+domain2
+domain3
