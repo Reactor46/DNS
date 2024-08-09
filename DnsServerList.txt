@@ -1,0 +1,5 @@
+LASDC01.fnbm.corp
+LASDC02.fnbm.corp
+LASDC05.fnbm.corp
+phxdc03.phx.fnbm.corp
+phxdc04.phx.fnbm.corp
